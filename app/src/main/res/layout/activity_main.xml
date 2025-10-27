@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Header -->
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MUTUAL FUNDS ANALYSIS"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textAlignment="center"
+            android:padding="24dp"
+            android:letterSpacing="0.2"/>
+
+        <!-- Fund input & add button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="8dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etFund"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Start typing the mutual fund name" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAdd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add" />
+        </LinearLayout>
+
+        <!-- Selected funds list -->
+        <TextView
+            android:layout_marginTop="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Selected Funds"
+            android:textStyle="bold"
+            android:paddingTop="8dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSelected"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:paddingTop="8dp" />
+
+        <!-- Chart options: radio group for chart type -->
+        <TextView
+            android:layout_marginTop="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Type of Chart" />
+
+        <RadioGroup
+            android:id="@+id/rgChart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton android:id="@+id/rbNav" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="NAV or Index Value" />
+            <RadioButton android:id="@+id/rbCagr" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Lumpsum Rolling Returns (CAGR %)" android:checked="true" />
+            <!-- add more as needed -->
+        </RadioGroup>
+
+        <!-- Duration chips -->
+        <TextView android:layout_marginTop="12dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Investment Duration" />
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleSelection="true"
+            android:layout_marginTop="8dp"
+            android:chipSpacing="8dp">
+
+            <com.google.android.material.chip.Chip android:id="@+id/chip1" android:text="1 Year" android:checkable="true" android:checked="true"/>
+            <com.google.android.material.chip.Chip android:id="@+id/chip3" android:text="3 Years" android:checkable="true"/>
+            <com.google.android.material.chip.Chip android:id="@+id/chip5" android:text="5 Years" android:checkable="true"/>
+            <com.google.android.material.chip.Chip android:id="@+id/chip10" android:text="10 Years" android:checkable="true"/>
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Chart container -->
+        <TextView
+            android:layout_marginTop="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Chart"
+            android:textStyle="bold"/>
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/lineChart"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginTop="8dp" />
+
+        <!-- Fetch button (simulate refresh) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFetch"
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Show Chart" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
