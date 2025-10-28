@@ -92,12 +92,33 @@
             android:layout_height="wrap_content"
             app:singleSelection="true"
             android:layout_marginTop="8dp"
-            android:chipSpacing="8dp">
+            app:chipSpacing="8dp">
 
-            <com.google.android.material.chip.Chip android:id="@+id/chip1" android:text="1 Year" android:checkable="true" android:checked="true"/>
-            <com.google.android.material.chip.Chip android:id="@+id/chip3" android:text="3 Years" android:checkable="true"/>
-            <com.google.android.material.chip.Chip android:id="@+id/chip5" android:text="5 Years" android:checkable="true"/>
-            <com.google.android.material.chip.Chip android:id="@+id/chip10" android:text="10 Years" android:checkable="true"/>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1 Year"
+                android:checkable="true"
+                android:checked="true"/>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3 Years"
+                android:checkable="true"/>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="5 Years"
+                android:checkable="true"/>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip10"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="10 Years"
+                android:checkable="true"/>
         </com.google.android.material.chip.ChipGroup>
 
         <!-- Chart container -->

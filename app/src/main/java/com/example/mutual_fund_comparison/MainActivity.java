@@ -17,6 +17,8 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
+import com.example.mutual_fund_comparison.model.Fund;
+import com.example.mutual_fund_comparison.adapters.FundAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
