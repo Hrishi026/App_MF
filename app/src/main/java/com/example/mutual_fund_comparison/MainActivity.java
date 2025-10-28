@@ -1,5 +1,6 @@
 package com.example.mutual_fund_comparison;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -14,11 +15,13 @@ import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
 import com.example.mutual_fund_comparison.model.Fund;
 import com.example.mutual_fund_comparison.adapters.FundAdapter;
+import com.example.mutual_fund_comparison.model.MockData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,21 +47,23 @@ public class MainActivity extends AppCompatActivity {
         ChipGroup chipGroup = findViewById(R.id.chipGroup);
 
         // Recycler setup
-        adapter = new FundAdapter(selected, position -> {
+		adapter = new FundAdapter(selected, position -> {
             if (position >= 0 && position < selected.size()) {
                 selected.remove(position);
                 adapter.notifyItemRemoved(position);
+				showSampleChart();
             }
         });
         rv.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         rv.setAdapter(adapter);
 
-        btnAdd.setOnClickListener(v -> {
+		btnAdd.setOnClickListener(v -> {
             String name = etFund.getText() != null ? etFund.getText().toString().trim() : "";
             if (!TextUtils.isEmpty(name)) {
                 selected.add(new Fund(name));
                 adapter.notifyItemInserted(selected.size() - 1);
                 etFund.setText("");
+				showSampleChart();
             }
         });
 
@@ -70,42 +75,65 @@ public class MainActivity extends AppCompatActivity {
             showSampleChart();
         });
 
-        // initial demo
-        selected.add(new Fund("Axis Income Plus Arbitrage"));
+        // initial demo: pre-populate with a few mock funds
+        selected.clear();
+        selected.addAll(MockData.getSampleFunds());
         adapter.notifyDataSetChanged();
         showSampleChart();
     }
 
-    private void showSampleChart() {
-        // Generate time-series sample data (single line)
-        List<Entry> entries = new ArrayList<>();
-        Random rnd = new Random();
-        float value = 5f;
-        for (int i = 0; i < 120; i++) { // 120 sample points (months)
-            value += (rnd.nextFloat() - 0.45f) * 0.6f;
-            entries.add(new Entry(i, value));
-        }
+	private void showSampleChart() {
+		// For each selected fund, generate a synthetic time-series and add as a dataset
+		List<ILineDataSet> dataSets = new ArrayList<>();
 
-        LineDataSet ds = new LineDataSet(entries, selected.isEmpty() ? "Demo fund" : selected.get(0).getName());
-        ds.setLineWidth(2f);
-        ds.setDrawCircles(false);
-        ds.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-        ds.setDrawFilled(true);
-        ds.setFillAlpha(80);
+		if (selected.isEmpty()) {
+			lineChart.setData(null);
+			lineChart.invalidate();
+			return;
+		}
 
-        LineData ld = new LineData(ds);
-        lineChart.setData(ld);
+		int points = 120; // 120 months
+		for (Fund fund : selected) {
+			// Deterministic color and randomness per fund name
+			int seed = fund.getName() != null ? fund.getName().hashCode() : 0;
+			Random rnd = new Random(seed);
+			float value = 5f + (seed % 300) / 100f; // small offset between funds
 
-        // styling
-        lineChart.getDescription().setEnabled(false);
-        XAxis x = lineChart.getXAxis();
-        x.setPosition(XAxis.XAxisPosition.BOTTOM);
-        x.setDrawGridLines(false);
-        lineChart.getAxisRight().setEnabled(false);
-        lineChart.getAxisLeft().setDrawGridLines(true);
-        Legend l = lineChart.getLegend();
-        l.setForm(Legend.LegendForm.LINE);
+			List<Entry> entries = new ArrayList<>(points);
+			for (int i = 0; i < points; i++) {
+				value += (rnd.nextFloat() - 0.45f) * 0.6f;
+				entries.add(new Entry(i, value));
+			}
 
-        lineChart.invalidate();
-    }
+			LineDataSet ds = new LineDataSet(entries, fund.getName());
+			ds.setLineWidth(2f);
+			ds.setDrawCircles(false);
+			ds.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+			ds.setDrawFilled(false);
+			// Distinct color based on fund name
+			int color = Color.HSVToColor(new float[]{Math.abs(seed % 360), 0.7f, 0.9f});
+			ds.setColor(color);
+			ds.setHighLightColor(color);
+			ds.setValueTextColor(color);
+
+			dataSets.add(ds);
+		}
+
+		LineData ld = new LineData(dataSets);
+		ld.setDrawValues(false);
+		lineChart.setData(ld);
+
+		// styling
+		lineChart.getDescription().setEnabled(false);
+		XAxis x = lineChart.getXAxis();
+		x.setPosition(XAxis.XAxisPosition.BOTTOM);
+		x.setDrawGridLines(false);
+		lineChart.getAxisRight().setEnabled(false);
+		lineChart.getAxisLeft().setDrawGridLines(true);
+		Legend l = lineChart.getLegend();
+		l.setForm(Legend.LegendForm.LINE);
+		l.setWordWrapEnabled(true);
+
+		lineChart.invalidate();
+	}
 }
