@@ -32,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Fund> selected = new ArrayList<>();
     private FundAdapter adapter;
     private LineChart lineChart;
+    private RadioGroup rgChart;
+    private ChipGroup chipGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
         MaterialButton btnFetch = findViewById(R.id.btnFetch);
         RecyclerView rv = findViewById(R.id.rvSelected);
         lineChart = findViewById(R.id.lineChart);
-        RadioGroup rgChart = findViewById(R.id.rgChart);
-        ChipGroup chipGroup = findViewById(R.id.chipGroup);
+        rgChart = findViewById(R.id.rgChart);
+        chipGroup = findViewById(R.id.chipGroup);
 
         // Recycler setup
 		adapter = new FundAdapter(selected, position -> {
@@ -67,13 +69,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnFetch.setOnClickListener(v -> {
-            // chart type: (we have only two in UI) -> decide dataset by radio group or chip
-            int selectedChart = rgChart.getCheckedRadioButtonId();
-            int chipId = chipGroup.getCheckedChipId();
-            // For demo, we generate random sample data for each fund and overlay
-            showSampleChart();
-        });
+        btnFetch.setOnClickListener(v -> showSampleChart());
+
+        rgChart.setOnCheckedChangeListener((group, id) -> showSampleChart());
+        chipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> showSampleChart());
 
         // initial demo: pre-populate with a few mock funds
         selected.clear();
@@ -82,8 +81,8 @@ public class MainActivity extends AppCompatActivity {
         showSampleChart();
     }
 
-	private void showSampleChart() {
-		// For each selected fund, generate a synthetic time-series and add as a dataset
+    private void showSampleChart() {
+        // For each selected fund, generate a synthetic NAV time-series and add as a dataset
 		List<ILineDataSet> dataSets = new ArrayList<>();
 
 		if (selected.isEmpty()) {
@@ -92,20 +91,49 @@ public class MainActivity extends AppCompatActivity {
 			return;
 		}
 
-		int points = 120; // 120 months
+        int years = getSelectedYears();
+        int points = years * 12; // months
+        boolean showCagr = rgChart.getCheckedRadioButtonId() == R.id.rbCagr;
+
 		for (Fund fund : selected) {
 			// Deterministic color and randomness per fund name
 			int seed = fund.getName() != null ? fund.getName().hashCode() : 0;
 			Random rnd = new Random(seed);
-			float value = 5f + (seed % 300) / 100f; // small offset between funds
+            float value = 10f + (seed % 300) / 50f; // starting NAV offset
 
-			List<Entry> entries = new ArrayList<>(points);
-			for (int i = 0; i < points; i++) {
-				value += (rnd.nextFloat() - 0.45f) * 0.6f;
-				entries.add(new Entry(i, value));
-			}
+            // Build a long base NAV history to slice from (10 years)
+            int maxPoints = 10 * 12;
+            float[] nav = new float[maxPoints];
+            for (int i = 0; i < maxPoints; i++) {
+                value *= 1f + ((rnd.nextFloat() - 0.45f) * 0.02f); // gentle monthly drift
+                nav[i] = value;
+            }
 
-			LineDataSet ds = new LineDataSet(entries, fund.getName());
+            int start = Math.max(0, maxPoints - points);
+            List<Entry> entries = new ArrayList<>(points);
+            if (!showCagr) {
+                // NAV line (indexed to 0 at left for X axis)
+                for (int i = 0; i < points; i++) {
+                    entries.add(new Entry(i, nav[start + i]));
+                }
+            } else {
+                // Rolling CAGR for selected window (years), plotted monthly
+                // CAGR = (end/start)^(1/years) - 1 ; convert to percent
+                int window = years * 12;
+                for (int i = start; i < maxPoints; i++) {
+                    int idx = i - start;
+                    if (i - window >= 0) {
+                        float end = nav[i];
+                        float begin = nav[i - window];
+                        float cagr = (float)(Math.pow(end / begin, 1.0 / years) - 1.0) * 100f;
+                        entries.add(new Entry(idx, cagr));
+                    } else {
+                        entries.add(new Entry(idx, Float.NaN));
+                    }
+                }
+            }
+
+            LineDataSet ds = new LineDataSet(entries, labelFor(fund.getName(), showCagr, years));
 			ds.setLineWidth(2f);
 			ds.setDrawCircles(false);
 			ds.setMode(LineDataSet.Mode.CUBIC_BEZIER);
@@ -129,11 +157,34 @@ public class MainActivity extends AppCompatActivity {
 		x.setPosition(XAxis.XAxisPosition.BOTTOM);
 		x.setDrawGridLines(false);
 		lineChart.getAxisRight().setEnabled(false);
-		lineChart.getAxisLeft().setDrawGridLines(true);
+        lineChart.getAxisLeft().setDrawGridLines(true);
+        // Axis units
+        if (rgChart.getCheckedRadioButtonId() == R.id.rbCagr) {
+            lineChart.getAxisLeft().setValueFormatter(new com.github.mikephil.charting.formatter.ValueFormatter() {
+                @Override
+                public String getFormattedValue(float value) {
+                    return String.format("%.0f%%", value);
+                }
+            });
+        } else {
+            lineChart.getAxisLeft().setValueFormatter(null);
+        }
 		Legend l = lineChart.getLegend();
 		l.setForm(Legend.LegendForm.LINE);
 		l.setWordWrapEnabled(true);
 
 		lineChart.invalidate();
 	}
+
+    private int getSelectedYears() {
+        int id = chipGroup.getCheckedChipId();
+        if (id == R.id.chip3) return 3;
+        if (id == R.id.chip5) return 5;
+        if (id == R.id.chip10) return 10;
+        return 1;
+    }
+
+    private String labelFor(String fundName, boolean cagr, int years) {
+        return cagr ? fundName + " (CAGR " + years + "y)" : fundName + " (NAV)";
+    }
 }
